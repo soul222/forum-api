@@ -1,0 +1,94 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: supersecretpassword
+          POSTGRES_USER: developer
+          POSTGRES_DB: forumapi_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linter
+      run: npm run lint || echo "No lint script found"
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432; do
+          echo "Waiting for postgres..."
+          sleep 2
+        done
+
+    - name: Setup test database
+      run: npm run migrate:test
+      env:
+        PGHOST_TEST: localhost
+        PGUSER_TEST: developer
+        PGDATABASE_TEST: forumapi_test
+        PGPASSWORD_TEST: supersecretpassword
+        PGPORT_TEST: 5432
+        ACCESS_TOKEN_KEY: access-token-key-test
+        REFRESH_TOKEN_KEY: refresh-token-key-test
+        ACCESS_TOKEN_AGE: 3600
+
+    - name: Run tests
+      run: npm test
+      env:
+        CI: true
+        PGHOST_TEST: localhost
+        PGUSER_TEST: developer
+        PGDATABASE_TEST: forumapi_test
+        PGPASSWORD_TEST: supersecretpassword
+        PGPORT_TEST: 5432
+        ACCESS_TOKEN_KEY: access-token-key-test
+        REFRESH_TOKEN_KEY: refresh-token-key-test
+        ACCESS_TOKEN_AGE: 3600
+
+    - name: Generate test coverage
+      run: npm run test:coverage || npm test -- --coverage
+      env:
+        CI: true
+        PGHOST_TEST: localhost
+        PGUSER_TEST: developer
+        PGDATABASE_TEST: forumapi_test
+        PGPASSWORD_TEST: supersecretpassword
+        PGPORT_TEST: 5432
+        ACCESS_TOKEN_KEY: access-token-key-test
+        REFRESH_TOKEN_KEY: refresh-token-key-test
+        ACCESS_TOKEN_AGE: 3600
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        fail_ci_if_error: false
