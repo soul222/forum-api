@@ -8,7 +8,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # PostgreSQL service for integration tests
     services:
       postgres:
         image: postgres:13
