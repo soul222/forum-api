@@ -36,7 +36,6 @@ describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
         },
       });
 
-      // login user
       const loginResponse = await server.inject({
         method: 'POST',
         url: '/authentications',

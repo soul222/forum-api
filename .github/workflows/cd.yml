@@ -1,0 +1,36 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} '
+          cd /var/www/forum-api
+          git pull origin main
+          npm ci --production
+          npm run migrate up
+          pm2 restart forum-api || pm2 start src/app.js --name forum-api
+          sudo systemctl reload nginx
+        '
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+
+    - name: Verify deployment
+      run: |
+        sleep 10
+        curl -f https://${{ secrets.DOMAIN_NAME }}/threads || exit 1

@@ -26,7 +26,6 @@ describe('Forum API Functional Tests', () => {
     it('should handle complete forum workflow correctly', async () => {
       const server = await createServer(container);
 
-      // 1. Register users
       await server.inject({
         method: 'POST',
         url: '/users',
@@ -47,7 +46,6 @@ describe('Forum API Functional Tests', () => {
         },
       });
 
-      // 2. Login users
       const loginResponse1 = await server.inject({
         method: 'POST',
         url: '/authentications',
@@ -69,7 +67,6 @@ describe('Forum API Functional Tests', () => {
       const { data: { accessToken: accessToken1 } } = JSON.parse(loginResponse1.payload);
       const { data: { accessToken: accessToken2 } } = JSON.parse(loginResponse2.payload);
 
-      // 3. Create thread
       const threadResponse = await server.inject({
         method: 'POST',
         url: '/threads',
@@ -84,7 +81,6 @@ describe('Forum API Functional Tests', () => {
 
       const { data: { addedThread } } = JSON.parse(threadResponse.payload);
 
-      // 4. Add comments
       const commentResponse1 = await server.inject({
         method: 'POST',
         url: `/threads/${addedThread.id}/comments`,
@@ -110,7 +106,6 @@ describe('Forum API Functional Tests', () => {
       const { data: { addedComment: addedComment1 } } = JSON.parse(commentResponse1.payload);
       const { data: { addedComment: addedComment2 } } = JSON.parse(commentResponse2.payload);
 
-      // 5. Add replies
       await server.inject({
         method: 'POST',
         url: `/threads/${addedThread.id}/comments/${addedComment1.id}/replies`,
@@ -122,7 +117,6 @@ describe('Forum API Functional Tests', () => {
         },
       });
 
-      // 6. Like comments
       await server.inject({
         method: 'PUT',
         url: `/threads/${addedThread.id}/comments/${addedComment1.id}/likes`,
@@ -147,7 +141,6 @@ describe('Forum API Functional Tests', () => {
         },
       });
 
-      // 7. Get thread detail with all data
       const threadDetailResponse = await server.inject({
         method: 'GET',
         url: `/threads/${addedThread.id}`,
@@ -155,7 +148,6 @@ describe('Forum API Functional Tests', () => {
 
       const threadDetailJson = JSON.parse(threadDetailResponse.payload);
 
-      // 8. Verify complete response structure
       expect(threadDetailResponse.statusCode).toEqual(200);
       expect(threadDetailJson.status).toEqual('success');
       expect(threadDetailJson.data.thread).toBeDefined();
@@ -164,7 +156,6 @@ describe('Forum API Functional Tests', () => {
       expect(threadDetailJson.data.thread.comments[1].likeCount).toEqual(1);
       expect(threadDetailJson.data.thread.comments[0].replies).toHaveLength(1);
 
-      // 9. Delete comment and verify soft delete
       await server.inject({
         method: 'DELETE',
         url: `/threads/${addedThread.id}/comments/${addedComment2.id}`,
@@ -173,7 +164,6 @@ describe('Forum API Functional Tests', () => {
         },
       });
 
-      // 10. Verify deleted comment shows as deleted
       const threadAfterDeleteResponse = await server.inject({
         method: 'GET',
         url: `/threads/${addedThread.id}`,
