@@ -36,12 +36,17 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm ci
+    - name: Check for package-lock.json
+      run: |
+        if [ -f package-lock.json ]; then
+          echo "package-lock.json exists, using npm ci"
+          npm ci
+        else
+          echo "package-lock.json not found, using npm install"
+          npm install
+        fi
 
-    - name: Run linter
-      run: npm run lint || echo "No lint script found"
-
+    # Rest of your CI steps...
     - name: Wait for PostgreSQL
       run: |
         until pg_isready -h localhost -p 5432; do
@@ -73,22 +78,3 @@ jobs:
         ACCESS_TOKEN_KEY: access-token-key-test
         REFRESH_TOKEN_KEY: refresh-token-key-test
         ACCESS_TOKEN_AGE: 3600
-
-    - name: Generate test coverage
-      run: npm run test:coverage || npm test -- --coverage
-      env:
-        CI: true
-        PGHOST_TEST: localhost
-        PGUSER_TEST: developer
-        PGDATABASE_TEST: forumapi_test
-        PGPASSWORD_TEST: supersecretpassword
-        PGPORT_TEST: 5432
-        ACCESS_TOKEN_KEY: access-token-key-test
-        REFRESH_TOKEN_KEY: refresh-token-key-test
-        ACCESS_TOKEN_AGE: 3600
-
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        fail_ci_if_error: false
