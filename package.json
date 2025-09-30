@@ -4,17 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
+  "start": "node src/app.js",
     "start:dev": "nodemon src/app.js",
     "test": "jest --setupFiles dotenv/config -i",
     "test:watch:change": "jest --watch --setupFiles dotenv/config -i",
     "test:watch": "jest --watchAll --coverage --setupFiles dotenv/config -i",
-    "migrate:prod up": "node-pg-migrate up",
-    "migrate:create": "node-pg-migrate create",
+    "test:coverage": "jest --setupFiles dotenv/config -i --coverage",
+    "lint": "eslint src --ext .js",
+    "lint:fix": "eslint src --ext .js --fix",
+    "migrate": "node-pg-migrate",
     "migrate:test": "node-pg-migrate -f config/database/test.json up",
-    "migrate:test:down": "node-pg-migrate -f config/database/test.json down",
-    "lint": "eslint ./src",
-    "fix": "eslint --fix ."
+    "migrate:test:down": "node-pg-migrate -f config/database/test.json down"
   },
   "keywords": [],
   "author": "",
