@@ -90,10 +90,11 @@ describe('GetThreadUseCase', () => {
     // Action
     const result = await getThreadUseCase.execute(threadId);
 
+    // Assert
     expect(result).toStrictEqual({
       thread: {
         id: 'thread-123',
-        title: 'thread salah',
+        title: 'sebuah thread',
         body: 'sebuah body thread',
         date: '2021-08-08T07:19:09.775Z',
         username: 'dicoding',
